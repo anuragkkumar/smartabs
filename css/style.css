@@ -1925,7 +1925,7 @@ html.clock-theme-light[data-clock-style="capsule"] .clock-wrapper {
   opacity: 1;
 }
 
-/* Onboarding Banner Hint Toast (Left Corner - Auto dismiss in 7s) */
+/* Onboarding Banner Hint Toast (Left Corner - Auto dismiss in 9s) */
 .banner-hint-popup {
   position: fixed;
   bottom: 24px;
@@ -1967,7 +1967,7 @@ html.clock-theme-light[data-clock-style="capsule"] .clock-wrapper {
   pointer-events: none;
 }
 
-/* 7-Second Animated Top Progress Bar */
+/* 9-Second Animated Top Progress Bar */
 @keyframes bannerHintProgressAnim {
   from {
     width: 0%;
@@ -1988,7 +1988,7 @@ html.clock-theme-light[data-clock-style="capsule"] .clock-wrapper {
 }
 
 .banner-hint-popup.show .banner-hint-progress {
-  animation: bannerHintProgressAnim 7000ms linear forwards;
+  animation: bannerHintProgressAnim 9000ms linear forwards;
 }
 
 .banner-hint-close {

@@ -2938,7 +2938,7 @@
   }
 
   /* ==========================================================================
-     First-Run Onboarding Banner Hint (7s Auto-dismiss, Left Corner)
+     First-Run Onboarding Banner Hint (9s Auto-dismiss, Left Corner)
      ========================================================================== */
   let bannerHintTimer = null;
 
@@ -2989,10 +2989,10 @@
       void DOM.bannerHintPopup.offsetWidth;
       DOM.bannerHintPopup.classList.add('show');
 
-      // Auto dismiss after 7 seconds (7000ms)
+      // Auto dismiss after 9 seconds (9000ms)
       bannerHintTimer = setTimeout(() => {
         dismissBannerHint();
-      }, 7000);
+      }, 9000);
     }, 700);
   }
 
