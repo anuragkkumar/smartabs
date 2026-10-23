@@ -266,7 +266,11 @@
     dockAppTitle: document.getElementById('dock-app-title'),
     dockAppUrl: document.getElementById('dock-app-url'),
     dockAppIcon: document.getElementById('dock-app-icon'),
-    btnCancelDockApp: document.getElementById('btn-cancel-dock-app')
+    btnCancelDockApp: document.getElementById('btn-cancel-dock-app'),
+    // First-run Onboarding Banner Hint Toast
+    bannerHintPopup: document.getElementById('banner-hint-popup'),
+    bannerHintProgress: document.getElementById('banner-hint-progress'),
+    btnCloseBannerHint: document.getElementById('btn-close-banner-hint')
   };
 
   /* ==========================================================================
@@ -310,17 +314,17 @@
         document.body.classList.add('clock-theme-light');
         if (document.documentElement) document.documentElement.classList.add('clock-theme-light');
       }
-    } catch (e) { }
+    } catch (e) {}
 
     await loadSettingsAndPreferences();
     initClock();
     initBackground();
     fetchAndRenderBoxes();
     MacAiDockEngine.init();
-    SpeedometerEngine.init();
     bindEvents();
     document.body.classList.remove('loading');
     document.body.classList.add('ready');
+    checkAndShowBannerHint();
   }
 
   /* ==========================================================================
@@ -329,7 +333,7 @@
 
   function updateClock() {
     const now = new Date();
-
+    
     // 1. Time (Clock)
     if (state.settings.showClock) {
       DOM.clockTime.style.display = 'block';
@@ -405,7 +409,7 @@
       if (document.documentElement) {
         document.documentElement.setAttribute('data-clock-style', effectiveMode);
       }
-    } catch (e) { }
+    } catch (e) {}
 
     // Adaptive contrast: auto-detect light/dark wallpaper for both modes
     const isLight = state.settings.adaptiveClock ? !!isLightBg : false;
@@ -417,7 +421,7 @@
     }
     try {
       localStorage.setItem('tabwai_clock_theme', isLight ? 'light' : 'dark');
-    } catch (e) { }
+    } catch (e) {}
   }
 
   function detectWallpaperLuminance(src) {
@@ -672,7 +676,7 @@
         DOM.bgVideo.muted = state.settings.videoMuted;
         DOM.bgVideo.play().catch(() => {
           DOM.bgVideo.muted = true;
-          DOM.bgVideo.play().catch(() => { });
+          DOM.bgVideo.play().catch(() => {});
         });
         DOM.bgVideo.classList.add('active');
         state.currentBg = { type: 'video', id: item.id, title: item.title, poster: item.poster };
@@ -880,7 +884,7 @@
     storageSet({ settings: state.settings });
     try {
       localStorage.setItem('tabwai_wallpaper_locked', state.settings.lockWallpaper ? 'true' : 'false');
-    } catch (e) { }
+    } catch (e) {}
 
     updateWallpaperLockUI(state.settings.lockWallpaper);
     showToast(state.settings.lockWallpaper ? '🔒 Wallpaper locked (will not change)' : '🔓 Wallpaper unlocked');
@@ -1491,7 +1495,7 @@
 
     if (confirm(`Delete the "${boxTitle}" box?\n\nAny sites in this box will be safely moved to "${targetName}".`)) {
       state.boxes = state.boxes.filter((b) => b.id !== boxId);
-
+      
       const targetId = remainingBox ? remainingBox.id : 'productivity';
       Object.keys(state.siteBoxMapping).forEach((url) => {
         if (state.siteBoxMapping[url] === boxId) {
@@ -1680,7 +1684,7 @@
     const curated = WALLPAPER_CATALOG.onlineCurated;
     const q = query.trim().toLowerCase();
     let rawList = curated[q] || [];
-
+    
     if (rawList.length === 0) {
       for (const key of Object.keys(curated)) {
         if (q.includes(key) || key.includes(q)) {
@@ -2059,7 +2063,7 @@
           const url = chrome.runtime.getURL(relPath);
           if (url) return url;
         }
-      } catch (e) { }
+      } catch (e) {}
       return relPath;
     }
 
@@ -2765,7 +2769,7 @@
     if (DOM.settingAdaptiveClock) state.settings.adaptiveClock = DOM.settingAdaptiveClock.checked;
     if (DOM.settingLockWallpaper) {
       state.settings.lockWallpaper = DOM.settingLockWallpaper.checked;
-      try { localStorage.setItem('tabwai_wallpaper_locked', state.settings.lockWallpaper ? 'true' : 'false'); } catch (e) { }
+      try { localStorage.setItem('tabwai_wallpaper_locked', state.settings.lockWallpaper ? 'true' : 'false'); } catch (e) {}
       updateWallpaperLockUI(state.settings.lockWallpaper);
     }
     if (DOM.settingClockStyle) {
@@ -2775,7 +2779,7 @@
         if (document.documentElement) {
           document.documentElement.setAttribute('data-clock-style', state.settings.clockStyleMode);
         }
-      } catch (e) { }
+      } catch (e) {}
     }
 
     await storageSet({ settings: state.settings });
@@ -2791,237 +2795,63 @@
   }
 
   /* ==========================================================================
-     Network Speedometer & Telemetry Engine (Apple Precision Glass)
+     First-Run Onboarding Banner Hint (7s Auto-dismiss, Left Corner)
      ========================================================================== */
+  let bannerHintTimer = null;
 
-  const SpeedometerEngine = (() => {
-    let isTesting = false;
-    const ARC_LENGTH = 276.5; // PI * 88
+  function dismissBannerHint() {
+    if (!DOM.bannerHintPopup) return;
+    if (bannerHintTimer) {
+      clearTimeout(bannerHintTimer);
+      bannerHintTimer = null;
+    }
+    DOM.bannerHintPopup.classList.remove('show');
+    DOM.bannerHintPopup.classList.add('closing');
+    setTimeout(() => {
+      if (DOM.bannerHintPopup) {
+        DOM.bannerHintPopup.classList.add('hidden');
+        DOM.bannerHintPopup.classList.remove('closing');
+      }
+    }, 400);
+  }
 
-    function getScaleFraction(mbps) {
-      if (mbps <= 0) return 0;
-      if (mbps <= 50) return (mbps / 50) * 0.25;
-      if (mbps <= 100) return 0.25 + ((mbps - 50) / 50) * 0.25;
-      if (mbps <= 250) return 0.50 + ((mbps - 100) / 150) * 0.25;
-      if (mbps <= 500) return 0.75 + ((mbps - 250) / 250) * 0.25;
-      return 1.0;
+  async function checkAndShowBannerHint() {
+    if (!DOM.bannerHintPopup) return;
+
+    // Check if user has already seen this tip
+    try {
+      const localSeen = localStorage.getItem('tabwai_banner_tip_seen');
+      if (localSeen === 'true') return;
+
+      const stored = await storageGet(['bannerTipSeen']);
+      if (stored && stored.bannerTipSeen) {
+        localStorage.setItem('tabwai_banner_tip_seen', 'true');
+        return;
+      }
+    } catch (e) {
+      // Continue safely
     }
 
-    function setGauge(mbps) {
-      const val = Math.max(0, mbps);
-      const fraction = Math.min(1, Math.max(0, getScaleFraction(val)));
-      const offset = ARC_LENGTH * (1 - fraction);
+    // Mark as seen immediately so it doesn't trigger on multiple new tabs opened simultaneously
+    try {
+      localStorage.setItem('tabwai_banner_tip_seen', 'true');
+      storageSet({ bannerTipSeen: true });
+    } catch (e) {}
 
-      const arc = document.getElementById('speedo-progress-arc');
-      const tipPip = document.getElementById('speedo-tip-pip');
-      const valEl = document.getElementById('speedo-val');
+    // Wait 700ms after new tab load before sliding up
+    setTimeout(() => {
+      if (!DOM.bannerHintPopup) return;
+      DOM.bannerHintPopup.classList.remove('hidden');
+      // Force layout reflow so transitions execute cleanly
+      void DOM.bannerHintPopup.offsetWidth;
+      DOM.bannerHintPopup.classList.add('show');
 
-      if (arc) {
-        arc.style.strokeDashoffset = offset.toFixed(1);
-      }
-
-      if (tipPip) {
-        if (fraction > 0) {
-          const angleRad = fraction * Math.PI;
-          const px = 130 - 88 * Math.cos(angleRad);
-          const py = 122 - 88 * Math.sin(angleRad);
-          tipPip.setAttribute('cx', px.toFixed(1));
-          tipPip.setAttribute('cy', py.toFixed(1));
-          tipPip.style.opacity = '1';
-        } else {
-          tipPip.style.opacity = '0';
-        }
-      }
-
-      if (valEl) {
-        valEl.textContent = val > 0 ? (val >= 100 ? Math.round(val) : val.toFixed(1)) : '--';
-      }
-    }
-
-    async function measurePing() {
-      const pingEl = document.getElementById('speedo-ping');
-      const jitterEl = document.getElementById('speedo-jitter');
-
-      const pingTimes = [];
-      const testUrl = 'assets/icons/icon-32.png';
-
-      for (let i = 0; i < 3; i++) {
-        const t0 = performance.now();
-        try {
-          await fetch(`${testUrl}?_t=${Date.now()}_${i}`, {
-            method: 'HEAD',
-            cache: 'no-store'
-          });
-          const dt = Math.max(2, Math.round(performance.now() - t0));
-          pingTimes.push(dt);
-        } catch (e) {
-          pingTimes.push(16 + Math.round(Math.random() * 12));
-        }
-      }
-
-      const avgPing = Math.round(pingTimes.reduce((a, b) => a + b, 0) / pingTimes.length);
-      const jitter = Math.max(1, Math.round(Math.abs(pingTimes[0] - pingTimes[pingTimes.length - 1])));
-
-      if (pingEl) pingEl.innerHTML = `${avgPing} <small>ms</small>`;
-      if (jitterEl) jitterEl.innerHTML = `${jitter} <small>ms</small>`;
-
-      return { avgPing, jitter };
-    }
-
-    async function runSpeedTest() {
-      if (isTesting) return;
-      isTesting = true;
-
-      const btn = document.getElementById('btn-run-speed-test');
-      const btnLabel = document.getElementById('speedo-btn-label');
-      const badge = document.getElementById('speedo-quality-badge');
-      const ratingEl = document.getElementById('speedo-rating-text');
-
-      if (btn) btn.classList.add('testing');
-      if (btnLabel) btnLabel.textContent = 'Measuring Latency...';
-      if (badge) badge.className = 'speedo-quality-badge testing';
-      if (ratingEl) ratingEl.textContent = 'Probing Ping & Jitter...';
-
-      // 1. Measure Ping & Jitter
-      await measurePing();
-
-      if (btnLabel) btnLabel.textContent = 'Testing Download...';
-      if (ratingEl) ratingEl.textContent = 'Measuring Throughput...';
-
-      // 2. Measure Download Throughput
-      const tStart = performance.now();
-      let animFrame = null;
-      let targetDisplaySpeed = 0;
-      let currentDisplaySpeed = 0;
-
-      const animateLoop = () => {
-        if (!isTesting) return;
-        currentDisplaySpeed += (targetDisplaySpeed - currentDisplaySpeed) * 0.22;
-        const jitterVal = (Math.random() - 0.5) * 1.8;
-        setGauge(Math.max(0, currentDisplaySpeed + jitterVal));
-        animFrame = requestAnimationFrame(animateLoop);
-      };
-      animFrame = requestAnimationFrame(animateLoop);
-
-      let totalBytes = 0;
-      try {
-        const res = await fetch(`assets/wallpapers/4k-alpine-sunset.jpg?_cb=${Date.now()}`, { cache: 'no-store' });
-        if (res.ok) {
-          const reader = res.body ? res.body.getReader() : null;
-          if (reader) {
-            let received = 0;
-            let lastUpdate = performance.now();
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-              received += value.length;
-              const now = performance.now();
-              const dt = (now - lastUpdate) / 1000;
-              if (dt > 0.12) {
-                const mbps = (received * 8) / ((now - tStart) / 1000) / 1000000;
-                targetDisplaySpeed = Math.min(480, mbps * 3.2);
-                lastUpdate = now;
-              }
-            }
-            totalBytes = received;
-          } else {
-            const blob = await res.blob();
-            totalBytes = blob.size;
-          }
-        }
-      } catch (err) {
-        totalBytes = 2800000;
-      }
-
-      const elapsedSec = Math.max(0.4, (performance.now() - tStart) / 1000);
-      let calculatedMbps = Math.round(((totalBytes * 8) / elapsedSec / 1000000) * 10) / 10;
-
-      // Realistic speed scaling
-      if (calculatedMbps < 12 && navigator.connection && navigator.connection.downlink) {
-        calculatedMbps = Math.round(navigator.connection.downlink * 8 * 10) / 10;
-      }
-      if (calculatedMbps < 16) {
-        calculatedMbps = Math.round((42.6 + Math.random() * 55) * 10) / 10;
-      }
-
-      targetDisplaySpeed = calculatedMbps;
-      await new Promise((r) => setTimeout(r, 650));
-
-      cancelAnimationFrame(animFrame);
-      isTesting = false;
-
-      setGauge(calculatedMbps);
-
-      if (btn) btn.classList.remove('testing');
-      if (btnLabel) btnLabel.textContent = 'Test Again';
-
-      let ratingClass = 'fast';
-      let ratingText = '';
-      if (calculatedMbps >= 100) {
-        ratingClass = 'ultra';
-        ratingText = 'Ultra Fast • 4K HDR & Gaming Ready';
-      } else if (calculatedMbps >= 40) {
-        ratingClass = 'fast';
-        ratingText = 'High Speed • 4K Streaming Ready';
-      } else if (calculatedMbps >= 15) {
-        ratingClass = 'fast';
-        ratingText = 'Fast & Stable • Smooth HD Streaming';
-      } else {
-        ratingClass = 'stable';
-        ratingText = 'Connected • Standard Browsing';
-      }
-
-      if (badge) badge.className = `speedo-quality-badge ${ratingClass}`;
-      if (ratingEl) ratingEl.textContent = ratingText;
-
-      try {
-        localStorage.setItem('tabwai_last_speed', JSON.stringify({
-          speed: calculatedMbps,
-          time: Date.now(),
-          ratingText,
-          ratingClass
-        }));
-      } catch (e) {}
-    }
-
-    function init() {
-      const netTypeEl = document.getElementById('speedo-network-type');
-      if (netTypeEl && navigator.connection) {
-        const type = navigator.connection.effectiveType || 'Wi-Fi';
-        netTypeEl.textContent = type.toUpperCase();
-      }
-
-      const statusBadge = document.getElementById('speedo-status-badge');
-      const statusText = document.getElementById('speedo-status-text');
-      const updateOnlineStatus = () => {
-        const isOnline = navigator.onLine;
-        if (statusBadge) statusBadge.classList.toggle('offline', !isOnline);
-        if (statusText) statusText.textContent = isOnline ? 'Online' : 'Offline';
-      };
-      window.addEventListener('online', updateOnlineStatus);
-      window.addEventListener('offline', updateOnlineStatus);
-      updateOnlineStatus();
-
-      try {
-        const saved = localStorage.getItem('tabwai_last_speed');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed && parsed.speed) {
-            setGauge(parsed.speed);
-            const ratingEl = document.getElementById('speedo-rating-text');
-            const badge = document.getElementById('speedo-quality-badge');
-            if (ratingEl && parsed.ratingText) ratingEl.textContent = parsed.ratingText;
-            if (badge && parsed.ratingClass) badge.className = `speedo-quality-badge ${parsed.ratingClass}`;
-          }
-        }
-      } catch (e) {}
-
-      const btn = document.getElementById('btn-run-speed-test');
-      if (btn) btn.addEventListener('click', runSpeedTest);
-    }
-
-    return { init, runSpeedTest };
-  })();
+      // Auto dismiss after 7 seconds (7000ms)
+      bannerHintTimer = setTimeout(() => {
+        dismissBannerHint();
+      }, 7000);
+    }, 700);
+  }
 
   /* ==========================================================================
      Event Handlers & Interactivity
@@ -3329,6 +3159,14 @@
       DOM.btnLockWallpaperGallery.addEventListener('click', toggleWallpaperLock);
     }
 
+    // First-run Onboarding Banner Hint Toast Close
+    if (DOM.btnCloseBannerHint) {
+      DOM.btnCloseBannerHint.addEventListener('click', (e) => {
+        e.preventDefault();
+        dismissBannerHint();
+      });
+    }
+
     DOM.btnResetCache.addEventListener('click', async () => {
       if (confirm('Reset your boxes and shortcuts back to default?')) {
         state.hiddenUrls.clear();
@@ -3338,6 +3176,9 @@
         state.customSites = JSON.parse(JSON.stringify(DEFAULT_CUSTOM_SITES));
         state.dockApps = JSON.parse(JSON.stringify(DEFAULT_DOCK_APPS));
         state.dockPinned = false;
+        try {
+          localStorage.removeItem('tabwai_banner_tip_seen');
+        } catch (e) {}
         await storageSet({
           hiddenUrls: [],
           pinnedUrls: [],
@@ -3345,7 +3186,8 @@
           siteBoxMapping: {},
           boxes: state.boxes,
           dockApps: state.dockApps,
-          dockPinned: false
+          dockPinned: false,
+          bannerTipSeen: false
         });
         fetchAndRenderBoxes();
         MacAiDockEngine.render();
@@ -3438,9 +3280,9 @@
     // Toggle Fullscreen
     DOM.btnToggleFullscreen.addEventListener('click', () => {
       if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => { });
+        document.documentElement.requestFullscreen().catch(() => {});
       } else {
-        document.exitFullscreen().catch(() => { });
+        document.exitFullscreen().catch(() => {});
       }
     });
 
