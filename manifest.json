@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "Tabwai - Minimalist New Tab & Live Wallpapers",
+  "version": "1.0.0",
+  "description": "Ultra-minimalist new tab for Chrome and Brave. Enjoy pristine 4K wallpapers and live video backgrounds, then scroll down to seamlessly reveal your most-used sites sorted in order.",
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "incognito": "spanning",
+  "permissions": [
+    "storage",
+    "favicon",
+    "declarativeNetRequest"
+  ],
+  "host_permissions": [
+    "https://wallhaven.cc/*",
+    "https://*.wallhaven.cc/*",
+    "https://images.unsplash.com/*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;"
+  },
+  "background": {
+    "service_worker": "js/background.js"
+  },
+  "icons": {
+    "16": "assets/icons/icon-16.png",
+    "32": "assets/icons/icon-32.png",
+    "48": "assets/icons/icon-48.png",
+    "128": "assets/icons/icon-128.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "assets/icons/icon-16.png",
+      "32": "assets/icons/icon-32.png",
+      "48": "assets/icons/icon-48.png",
+      "128": "assets/icons/icon-128.png"
+    },
+    "default_title": "Tabwai"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "assets/sounds/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}

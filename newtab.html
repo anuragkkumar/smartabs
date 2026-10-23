@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Tab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/icon-32.png">
+  <script src="js/preloader.js"></script>
+</head>
+<body class="loading">
+  <!-- Active Background Media Container -->
+  <div id="bg-container" class="bg-container" aria-hidden="true">
+    <video id="bg-video" class="bg-media" autoplay loop muted playsinline></video>
+    <div id="bg-image-prev" class="bg-media"></div>
+    <div id="bg-image" class="bg-media"></div>
+    <div id="bg-overlay" class="bg-overlay"></div>
+  </div>
+
+  <!-- macOS Left Glass AI Launchpad Dock -->
+  <div id="mac-dock-wrapper" class="mac-dock-wrapper" aria-label="macOS AI Dock">
+    <!-- Discreet Edge Trigger Handle on Left Screen Edge -->
+    <div id="mac-dock-handle" class="mac-dock-handle" title="AI Launchpad (Hover left edge or click to open)" role="button" tabindex="0" aria-label="Open AI Dock">
+      <div class="dock-handle-bar"></div>
+      <span class="dock-handle-glow"></span>
+    </div>
+
+    <!-- macOS Vertical Glass Capsule Shelf -->
+    <aside id="mac-dock-shelf" class="mac-dock-shelf" role="toolbar" aria-label="AI Launchpad">
+      <!-- Pin / Keep Open Toggle & Header -->
+      <div class="dock-shelf-header">
+        <button id="btn-dock-pin" class="dock-header-icon-btn" title="Keep Dock Pinned / Auto-hide" aria-label="Pin Dock">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 17v5M5 17h14l-2-6V4h1V2H6v2h1v7l-2 6z"/></svg>
+        </button>
+      </div>
+
+      <!-- App Icons List (ChatGPT, Claude, Perplexity, Gemini, etc.) -->
+      <div class="dock-items-container" id="dock-items-container">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="dock-divider" role="separator"></div>
+
+      <!-- Dock Action Tools: Add App & Edit Mode -->
+      <div class="dock-actions-row">
+        <button id="btn-dock-add" class="dock-tool-btn" title="Add App to AI Dock" aria-label="Add App">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <button id="btn-dock-edit" class="dock-tool-btn" title="Edit / Remove Apps" aria-label="Edit Dock">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Main Scrollable Wrapper -->
+  <main id="app-wrapper" class="app-wrapper">
+
+    <!-- Screen 1: Ultra-Minimalist Sanctuary (Default View) -->
+    <section id="minimal-view" class="screen-section minimal-screen" aria-label="Minimalist View">
+      
+      <!-- Ambient Top Navigation Bar (Discreet, fades on hover) -->
+      <header class="top-nav" id="top-nav">
+        <div class="browser-name-box" id="browser-name-box" title="Click to edit name">
+          <div class="browser-name-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
+          </div>
+          <input type="text" id="browser-name-input" class="browser-name-input" placeholder="Tabwai" value="Tabwai" maxlength="32" spellcheck="false" autocomplete="off" aria-label="Browser Name">
+          <span class="browser-name-hint" aria-hidden="true" title="Edit Name">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </span>
+        </div>
+        <div class="top-actions">
+          <button id="btn-random-bg" class="icon-btn" title="Cycle Random Background (Shortcut: W)" aria-label="Random Background">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          </button>
+          <button id="btn-gallery" class="icon-btn" title="Wallpaper & Live Video Gallery" aria-label="Wallpaper Gallery">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </button>
+          <button id="btn-incognito" class="icon-btn" title="Open Incognito Window & Tab (Alt+I)" aria-label="Open Incognito Window">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13h20"/><path d="M6 13l2.5-6h7l2.5 6"/><circle cx="7.5" cy="18" r="3"/><circle cx="16.5" cy="18" r="3"/><path d="M10.5 18h3"/></svg>
+          </button>
+          <button id="btn-soundscape" class="icon-btn" title="Ambient Soundscapes (Rain, Ocean, Fire, Forest, White Noise)" aria-label="Ambient Soundscapes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+              <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
+            </svg>
+            <span class="soundscape-active-badge hidden" id="soundscape-active-badge">
+              <span class="sound-wave-bar"></span>
+              <span class="sound-wave-bar"></span>
+              <span class="sound-wave-bar"></span>
+            </span>
+          </button>
+          <button id="btn-toggle-fullscreen" class="icon-btn" title="Toggle Fullscreen (F11)" aria-label="Toggle Fullscreen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          </button>
+          <button id="btn-settings" class="icon-btn" title="Settings" aria-label="Settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Floating Ambient Soundscape Focus Panel -->
+      <div id="soundscape-flyout" class="soundscape-flyout hidden" aria-hidden="true">
+        <div class="soundscape-header">
+          <div class="soundscape-title-wrap">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+              <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
+            </svg>
+            <span class="soundscape-title">Ambient Focus Soundscapes</span>
+          </div>
+          <button id="soundscape-close-btn" class="soundscape-close-btn" title="Close Panel" aria-label="Close soundscape panel">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <!-- Master Play / Pause Header Control -->
+        <div class="soundscape-master-bar">
+          <button id="btn-soundscape-toggle" class="soundscape-toggle-btn" aria-label="Play or Pause Soundscape">
+            <svg class="icon-play" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <svg class="icon-pause hidden" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            <span id="soundscape-status-text">Start Soundscape</span>
+          </button>
+          <div class="soundscape-timer-badge hidden" id="soundscape-timer-countdown" title="Focus Timer Remaining">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span id="soundscape-timer-label">25:00</span>
+          </div>
+        </div>
+
+        <!-- Soundscape Selection Grid -->
+        <div class="soundscape-grid" id="soundscape-presets">
+          <button class="soundscape-card active" data-sound="fire">
+            <span class="soundscape-icon">🔥</span>
+            <div class="soundscape-meta">
+              <span class="soundscape-name">Cozy Fireplace</span>
+              <span class="soundscape-desc">Crackling hearth &amp; campfire embers</span>
+            </div>
+          </button>
+          <button class="soundscape-card" data-sound="birds">
+            <span class="soundscape-icon">🐦</span>
+            <div class="soundscape-meta">
+              <span class="soundscape-name">Birds Chirping</span>
+              <span class="soundscape-desc">Peaceful morning forest songbirds</span>
+            </div>
+          </button>
+          <button class="soundscape-card" data-sound="rain">
+            <span class="soundscape-icon">🌧️</span>
+            <div class="soundscape-meta">
+              <span class="soundscape-name">Gentle Rain</span>
+              <span class="soundscape-desc">Calming rain &amp; soft window droplets</span>
+            </div>
+          </button>
+          <button class="soundscape-card" data-sound="ocean">
+            <span class="soundscape-icon">🌊</span>
+            <div class="soundscape-meta">
+              <span class="soundscape-name">Ocean Waves</span>
+              <span class="soundscape-desc">Rolling surf &amp; coastal swell</span>
+            </div>
+          </button>
+          <button class="soundscape-card" data-sound="river">
+            <span class="soundscape-icon">🏞️</span>
+            <div class="soundscape-meta">
+              <span class="soundscape-name">River Stream</span>
+              <span class="soundscape-desc">Crystal clear mountain brook</span>
+            </div>
+          </button>
+          <button class="soundscape-card" data-sound="crickets">
+            <span class="soundscape-icon">🦗</span>
+            <div class="soundscape-meta">
+              <span class="soundscape-name">Night Crickets</span>
+              <span class="soundscape-desc">Soothing evening meadow chorus</span>
+            </div>
+          </button>
+          <button class="soundscape-card" data-sound="thunder">
+            <span class="soundscape-icon">⛈️</span>
+            <div class="soundscape-meta">
+              <span class="soundscape-name">Distant Thunder</span>
+              <span class="soundscape-desc">Deep rolling storm &amp; soft rain</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- Volume Slider -->
+        <div class="soundscape-slider-row">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+          </svg>
+          <input type="range" id="soundscape-volume" min="0" max="100" value="65" class="soundscape-range" aria-label="Volume">
+          <span class="soundscape-volume-label" id="soundscape-volume-label">65%</span>
+        </div>
+
+        <!-- Focus Timer Quick Presets -->
+        <div class="soundscape-timer-row">
+          <span class="soundscape-timer-title">Focus Timer:</span>
+          <div class="soundscape-timer-pills" id="soundscape-timer-pills">
+            <button class="timer-pill active" data-time="0">Continuous</button>
+            <button class="timer-pill" data-time="15">15m</button>
+            <button class="timer-pill" data-time="25">25m 🍅</button>
+            <button class="timer-pill" data-time="45">45m</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center Minimalist Clock, Date & Google Search Box -->
+      <div class="clock-wrapper" id="clock-container">
+        <div class="clock-greeting-pill" id="clock-greeting-pill">
+          <span class="greeting-dot"></span>
+          <span class="clock-greeting" id="clock-greeting">Good evening</span>
+        </div>
+        <h1 class="clock-time" id="clock-time">00:00</h1>
+        <p class="clock-date" id="clock-date">Loading...</p>
+
+        <!-- Google Search Box Down Below Clock -->
+        <form id="google-search-form" class="google-search-form" autocomplete="off" role="search">
+          <div class="google-search-box">
+            <div class="google-search-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20">
+                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+                <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+              </svg>
+            </div>
+            <input type="text" id="google-search-input" class="google-search-input" placeholder="Search Google or type a URL..." spellcheck="false" autocomplete="off" aria-label="Google Search">
+            <button type="button" id="google-search-clear" class="google-search-clear hidden" aria-label="Clear Search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <button type="submit" id="google-search-submit" class="google-search-submit" aria-label="Search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Scroll Indicator Cue -->
+      <div class="scroll-cue" id="scroll-cue" role="button" tabindex="0" title="Scroll or click to view your top sites">
+        <span class="scroll-cue-mouse" aria-hidden="true">
+          <span class="scroll-cue-wheel"></span>
+        </span>
+        <span class="scroll-label">Scroll for shortcuts</span>
+        <div class="scroll-arrow-box">
+          <svg class="scroll-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- Screen 2: Frequently Used Sites Dashboard (Reveals on Scroll) -->
+    <section id="dashboard-section" class="screen-section dashboard-screen" aria-label="Frequently Used Sites">
+      <div class="dashboard-container">
+        
+        <!-- Dashboard Top Control Header -->
+        <div class="dashboard-header">
+          <div class="header-left">
+            <div class="section-title-wrap">
+              <h2 class="section-title">Saved Shortcuts</h2>
+              <span class="sites-count-badge" id="sites-count">0</span>
+            </div>
+            <p class="section-subtitle" id="dashboard-subtitle">Custom workspace boxes &amp; bookmarks</p>
+          </div>
+
+          <div class="header-right">
+            <!-- Dashboard Action Controls -->
+            <div class="dashboard-actions">
+              <button id="btn-add-box" class="action-btn primary" title="Create New Liquid Box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                <span>Add Box</span>
+              </button>
+
+              <button id="btn-add-site" class="action-btn" title="Add Custom Shortcut">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span>Add Site</span>
+              </button>
+
+              <button id="btn-scroll-top" class="action-btn icon-only" title="Return to Minimalist Sanctuary (Esc)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Liquid Rectangle Boxes Container -->
+        <div id="liquid-boxes-container" class="liquid-boxes-container" role="region" aria-live="polite">
+          <!-- Dynamically populated liquid boxes with category sites -->
+        </div>
+
+        <!-- Empty / No Results State -->
+        <div id="sites-empty-state" class="empty-state hidden">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <h3 id="empty-title">No sites yet</h3>
+          <p id="empty-desc">Click &quot;+ Add Site&quot; above to add your favorite websites to a liquid box.</p>
+        </div>
+
+        <!-- Minimalist Dashboard Footer -->
+        <footer class="dashboard-footer">
+          <span class="current-bg-title" id="current-bg-info">Live Background</span>
+        </footer>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Wallpaper & Video Gallery Modal -->
+  <div id="gallery-modal" class="modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card gallery-card">
+      <div class="modal-header">
+        <div class="modal-header-titles">
+          <h3>Background Gallery</h3>
+          <p>Over 190+ Pristine 4K Wallpapers, 11 Animated Live Videos &amp; Unlimited 1,000,000+ Online Wallhaven Search</p>
+        </div>
+        <button id="gallery-close-btn" class="modal-close-btn" aria-label="Close Gallery">&times;</button>
+      </div>
+
+      <div class="gallery-tabs">
+        <button class="gallery-tab active" data-tab="wallpapers">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <span id="tab-wallpapers-title">4K Wallpapers (190+)</span>
+        </button>
+        <button class="gallery-tab" data-tab="wallhaven">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          <span>Wallhaven 4K (Unlimited 1M+)</span>
+        </button>
+        <button class="gallery-tab" data-tab="videos">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          <span>Live Videos (11)</span>
+        </button>
+      </div>
+
+      <!-- Curated 4K Wallpapers Category Filters Toolbar -->
+      <div id="curated-wallpapers-toolbar" class="wallhaven-toolbar">
+        <div class="wallhaven-tags" id="curated-tags">
+          <button class="wh-tag active" data-curated-cat="all">✨ All (190+)</button>
+          <button class="wh-tag" data-curated-cat="Nature">🌲 Nature &amp; Landscapes</button>
+          <button class="wh-tag" data-curated-cat="Cyberpunk">⚡ Cyberpunk &amp; Neon</button>
+          <button class="wh-tag" data-curated-cat="Space">🌌 Space &amp; Cosmos</button>
+          <button class="wh-tag" data-curated-cat="Minimalist">🎨 Minimalist</button>
+          <button class="wh-tag" data-curated-cat="Dark">🌙 Dark OLED</button>
+          <button class="wh-tag" data-curated-cat="Automotive">🏎️ Automotive</button>
+          <button class="wh-tag" data-curated-cat="Anime">🌸 Anime &amp; Lo-Fi</button>
+          <button class="wh-tag" data-curated-cat="Urban">🏙️ City &amp; Architecture</button>
+        </div>
+      </div>
+
+      <!-- Wallhaven Online 4K Filter Toolbar -->
+      <div id="wallhaven-toolbar" class="wallhaven-toolbar hidden">
+        <div class="wallhaven-tags" id="wallhaven-tags">
+          <button class="wh-tag active" data-query="toplist">🔥 Top Rated</button>
+          <button class="wh-tag" data-query="cyberpunk">⚡ Cyberpunk</button>
+          <button class="wh-tag" data-query="nature landscape">🌲 Nature</button>
+          <button class="wh-tag" data-query="minimalism">🎨 Minimalist</button>
+          <button class="wh-tag" data-query="space galaxy">🌌 Space</button>
+          <button class="wh-tag" data-query="anime scenery">🌸 Anime</button>
+          <button class="wh-tag" data-query="dark neon">🌙 Dark &amp; Neon</button>
+          <button class="wh-tag" data-query="cars automotive">🏎️ Cars</button>
+          <button class="wh-tag" data-query="ocean sea">🌊 Ocean</button>
+          <button class="wh-tag" data-query="tokyo night">🗼 Tokyo</button>
+        </div>
+      </div>
+
+      <div class="gallery-content">
+        <div id="gallery-grid" class="gallery-grid">
+          <!-- Dynamically populated wallpapers/videos -->
+        </div>
+        <div id="wallhaven-load-more-wrap" class="wallhaven-load-more-wrap hidden">
+          <button id="btn-wallhaven-load-more" class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            <span>Load More 4K Wallpapers</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-footer gallery-footer" style="justify-content: flex-end;">
+        <button id="btn-gallery-random" class="action-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          <span>Surprise Me</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Custom Shortcut Modal -->
+  <div id="add-site-modal" class="modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card small-modal">
+      <div class="modal-header">
+        <h3>Add Site Shortcut</h3>
+        <button id="add-site-close-btn" class="modal-close-btn" aria-label="Close">&times;</button>
+      </div>
+      <form id="add-site-form" class="modal-form">
+        <div class="form-group">
+          <label for="input-site-title">Site Title</label>
+          <input type="text" id="input-site-title" placeholder="e.g. GitHub" required>
+        </div>
+        <div class="form-group">
+          <label for="input-site-url">Web URL</label>
+          <input type="url" id="input-site-url" placeholder="https://github.com" required>
+        </div>
+        <div class="form-group">
+          <label for="select-site-box">Target Liquid Box</label>
+          <select id="select-site-box" class="settings-select">
+            <!-- Dynamically populated options -->
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="btn-cancel-add-site" class="action-btn secondary">Cancel</button>
+          <button type="submit" class="action-btn primary">Save Shortcut</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Create New Liquid Box Modal -->
+  <div id="add-box-modal" class="modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card small-modal">
+      <div class="modal-header">
+        <h3>Create Liquid Box</h3>
+        <button id="add-box-close-btn" class="modal-close-btn" aria-label="Close">&times;</button>
+      </div>
+      <form id="add-box-form" class="modal-form">
+        <div class="form-group">
+          <label for="input-box-title">Box Name</label>
+          <input type="text" id="input-box-title" placeholder="e.g. Social Media, Productivity, Crypto" required>
+        </div>
+        <div class="form-group">
+          <label for="select-box-icon">Box Icon</label>
+          <div class="icon-picker-grid" id="icon-picker-grid">
+            <button type="button" class="icon-choice active" data-icon="⚡">⚡</button>
+            <button type="button" class="icon-choice" data-icon="💬">💬</button>
+            <button type="button" class="icon-choice" data-icon="🎬">🎬</button>
+            <button type="button" class="icon-choice" data-icon="💻">💻</button>
+            <button type="button" class="icon-choice" data-icon="🚀">🚀</button>
+            <button type="button" class="icon-choice" data-icon="📌">📌</button>
+            <button type="button" class="icon-choice" data-icon="📈">📈</button>
+            <button type="button" class="icon-choice" data-icon="🎮">🎮</button>
+            <button type="button" class="icon-choice" data-icon="🛍️">🛍️</button>
+            <button type="button" class="icon-choice" data-icon="📚">📚</button>
+            <button type="button" class="icon-choice" data-icon="🎵">🎵</button>
+            <button type="button" class="icon-choice" data-icon="☕">☕</button>
+          </div>
+          <input type="hidden" id="input-box-icon" value="⚡">
+        </div>
+        <div class="form-group">
+          <label>Liquid Color Accent</label>
+          <div class="color-picker-grid" id="color-picker-grid">
+            <button type="button" class="color-choice color-cyan active" data-color="cyan" title="Electric Cyan"></button>
+            <button type="button" class="color-choice color-purple" data-color="purple" title="Neon Purple"></button>
+            <button type="button" class="color-choice color-rose" data-color="rose" title="Sunset Rose"></button>
+            <button type="button" class="color-choice color-emerald" data-color="emerald" title="Emerald Green"></button>
+            <button type="button" class="color-choice color-amber" data-color="amber" title="Amber Gold"></button>
+            <button type="button" class="color-choice color-blue" data-color="blue" title="Cobalt Blue"></button>
+          </div>
+          <input type="hidden" id="input-box-color" value="cyan">
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="btn-cancel-add-box" class="action-btn secondary">Cancel</button>
+          <button type="submit" class="action-btn primary">Create Box</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Liquid Box Modal (Rename & Delete) -->
+  <div id="edit-box-modal" class="modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card small-modal">
+      <div class="modal-header">
+        <h3>Edit Liquid Box</h3>
+        <button id="edit-box-close-btn" class="modal-close-btn" aria-label="Close">&times;</button>
+      </div>
+      <form id="edit-box-form" class="modal-form">
+        <input type="hidden" id="edit-box-id">
+        <div class="form-group">
+          <label for="input-edit-box-title">Box Name</label>
+          <input type="text" id="input-edit-box-title" placeholder="e.g. Work, Social, Music" required>
+        </div>
+        <div class="form-group">
+          <label>Box Icon</label>
+          <div class="icon-picker-grid" id="edit-icon-picker-grid">
+            <button type="button" class="icon-choice" data-icon="⚡">⚡</button>
+            <button type="button" class="icon-choice" data-icon="💬">💬</button>
+            <button type="button" class="icon-choice" data-icon="🎬">🎬</button>
+            <button type="button" class="icon-choice" data-icon="💻">💻</button>
+            <button type="button" class="icon-choice" data-icon="🚀">🚀</button>
+            <button type="button" class="icon-choice" data-icon="📌">📌</button>
+            <button type="button" class="icon-choice" data-icon="📈">📈</button>
+            <button type="button" class="icon-choice" data-icon="🎮">🎮</button>
+            <button type="button" class="icon-choice" data-icon="🛍️">🛍️</button>
+            <button type="button" class="icon-choice" data-icon="📚">📚</button>
+            <button type="button" class="icon-choice" data-icon="🎵">🎵</button>
+            <button type="button" class="icon-choice" data-icon="☕">☕</button>
+          </div>
+          <input type="hidden" id="input-edit-box-icon" value="⚡">
+        </div>
+        <div class="form-group">
+          <label>Liquid Color Accent</label>
+          <div class="color-picker-grid" id="edit-color-picker-grid">
+            <button type="button" class="color-choice color-cyan" data-color="cyan" title="Electric Cyan"></button>
+            <button type="button" class="color-choice color-purple" data-color="purple" title="Neon Purple"></button>
+            <button type="button" class="color-choice color-rose" data-color="rose" title="Sunset Rose"></button>
+            <button type="button" class="color-choice color-emerald" data-color="emerald" title="Emerald Green"></button>
+            <button type="button" class="color-choice color-amber" data-color="amber" title="Amber Gold"></button>
+            <button type="button" class="color-choice color-blue" data-color="blue" title="Cobalt Blue"></button>
+          </div>
+          <input type="hidden" id="input-edit-box-color" value="cyan">
+        </div>
+        <div class="modal-actions" style="justify-content: space-between;">
+          <button type="button" id="btn-delete-current-box" class="action-btn danger">Delete Box</button>
+          <div style="display: flex; gap: 0.5rem;">
+            <button type="button" id="btn-cancel-edit-box" class="action-btn secondary">Cancel</button>
+            <button type="submit" class="action-btn primary">Save Changes</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Settings Drawer Modal -->
+  <div id="settings-modal" class="modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card settings-card">
+      <div class="modal-header">
+        <h3>Settings</h3>
+        <button id="settings-close-btn" class="modal-close-btn" aria-label="Close Settings">&times;</button>
+      </div>
+      <div class="settings-body">
+        
+        <div class="settings-group">
+          <h4>Minimalist View &amp; Widgets</h4>
+          <label class="toggle-control">
+            <input type="checkbox" id="setting-show-clock" checked>
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Show Time (Clock)</span>
+          </label>
+          <label class="toggle-control">
+            <input type="checkbox" id="setting-show-search" checked>
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Show Google Search Bar</span>
+          </label>
+          <label class="toggle-control">
+            <input type="checkbox" id="setting-show-date" checked>
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Show Current Date</span>
+          </label>
+          <label class="toggle-control">
+            <input type="checkbox" id="setting-show-greeting" checked>
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Show Greeting Chip (e.g. Good evening)</span>
+          </label>
+          <label class="toggle-control">
+            <input type="checkbox" id="setting-24h-clock">
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Use 24-Hour Format</span>
+          </label>
+          <label class="toggle-control">
+            <input type="checkbox" id="setting-adaptive-clock" checked>
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Auto-adapt clock style to wallpaper (High Visibility)</span>
+          </label>
+          <div class="setting-input-row" id="clock-style-setting-row">
+            <div class="setting-label-col">
+              <span class="setting-row-label">Clock Appearance</span>
+              <span class="setting-row-sub">Visual theme &amp; contrast mode</span>
+            </div>
+            <select id="setting-clock-style" class="setting-select">
+              <option value="auto">Floating Text (Auto Contrast)</option>
+              <option value="capsule">Frosted Glass Pill</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <h4>Reset &amp; Data</h4>
+          <button id="btn-reset-cache" class="action-btn danger">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            <span>Reset Shortcuts &amp; Preferences</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add / Edit Dock App -->
+  <div id="modal-dock-app" class="modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card small-modal">
+      <div class="modal-header">
+        <h3 id="dock-modal-title">Add App to AI Dock</h3>
+        <button id="dock-modal-close" class="modal-close-btn" aria-label="Close">&times;</button>
+      </div>
+      <form id="dock-app-form" class="modal-form">
+        <input type="hidden" id="dock-app-id">
+        <div class="form-group">
+          <label for="dock-app-title">App / Site Name</label>
+          <input type="text" id="dock-app-title" class="form-input" placeholder="e.g. DeepSeek, Notion AI, Midjourney" required autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label for="dock-app-url">Web Address (URL)</label>
+          <input type="url" id="dock-app-url" class="form-input" placeholder="https://..." required autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label for="dock-app-icon">Icon &amp; Style Theme</label>
+          <select id="dock-app-icon" class="settings-select">
+            <option value="auto">Auto Favicon (Recommended)</option>
+            <option value="chatgpt">ChatGPT Emerald</option>
+            <option value="claude">Claude Terracotta</option>
+            <option value="perplexity">Perplexity Cyan</option>
+            <option value="gemini">Gemini Sparkle Gradient</option>
+            <option value="ai">Generic AI Glow</option>
+            <option value="code">Code / Dev Terminal</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="btn-cancel-dock-app" class="action-btn secondary">Cancel</button>
+          <button type="submit" class="action-btn primary">Save to Dock</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/wallpapers.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
