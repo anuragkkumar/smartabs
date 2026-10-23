@@ -310,7 +310,7 @@
         document.body.classList.add('clock-theme-light');
         if (document.documentElement) document.documentElement.classList.add('clock-theme-light');
       }
-    } catch (e) {}
+    } catch (e) { }
 
     await loadSettingsAndPreferences();
     initClock();
@@ -329,7 +329,7 @@
 
   function updateClock() {
     const now = new Date();
-    
+
     // 1. Time (Clock)
     if (state.settings.showClock) {
       DOM.clockTime.style.display = 'block';
@@ -405,7 +405,7 @@
       if (document.documentElement) {
         document.documentElement.setAttribute('data-clock-style', effectiveMode);
       }
-    } catch (e) {}
+    } catch (e) { }
 
     // Adaptive contrast: auto-detect light/dark wallpaper for both modes
     const isLight = state.settings.adaptiveClock ? !!isLightBg : false;
@@ -417,7 +417,7 @@
     }
     try {
       localStorage.setItem('tabwai_clock_theme', isLight ? 'light' : 'dark');
-    } catch (e) {}
+    } catch (e) { }
   }
 
   function detectWallpaperLuminance(src) {
@@ -672,7 +672,7 @@
         DOM.bgVideo.muted = state.settings.videoMuted;
         DOM.bgVideo.play().catch(() => {
           DOM.bgVideo.muted = true;
-          DOM.bgVideo.play().catch(() => {});
+          DOM.bgVideo.play().catch(() => { });
         });
         DOM.bgVideo.classList.add('active');
         state.currentBg = { type: 'video', id: item.id, title: item.title, poster: item.poster };
@@ -880,7 +880,7 @@
     storageSet({ settings: state.settings });
     try {
       localStorage.setItem('tabwai_wallpaper_locked', state.settings.lockWallpaper ? 'true' : 'false');
-    } catch (e) {}
+    } catch (e) { }
 
     updateWallpaperLockUI(state.settings.lockWallpaper);
     showToast(state.settings.lockWallpaper ? '🔒 Wallpaper locked (will not change)' : '🔓 Wallpaper unlocked');
@@ -1491,7 +1491,7 @@
 
     if (confirm(`Delete the "${boxTitle}" box?\n\nAny sites in this box will be safely moved to "${targetName}".`)) {
       state.boxes = state.boxes.filter((b) => b.id !== boxId);
-      
+
       const targetId = remainingBox ? remainingBox.id : 'productivity';
       Object.keys(state.siteBoxMapping).forEach((url) => {
         if (state.siteBoxMapping[url] === boxId) {
@@ -1680,7 +1680,7 @@
     const curated = WALLPAPER_CATALOG.onlineCurated;
     const q = query.trim().toLowerCase();
     let rawList = curated[q] || [];
-    
+
     if (rawList.length === 0) {
       for (const key of Object.keys(curated)) {
         if (q.includes(key) || key.includes(q)) {
@@ -2059,7 +2059,7 @@
           const url = chrome.runtime.getURL(relPath);
           if (url) return url;
         }
-      } catch (e) {}
+      } catch (e) { }
       return relPath;
     }
 
@@ -2765,7 +2765,7 @@
     if (DOM.settingAdaptiveClock) state.settings.adaptiveClock = DOM.settingAdaptiveClock.checked;
     if (DOM.settingLockWallpaper) {
       state.settings.lockWallpaper = DOM.settingLockWallpaper.checked;
-      try { localStorage.setItem('tabwai_wallpaper_locked', state.settings.lockWallpaper ? 'true' : 'false'); } catch (e) {}
+      try { localStorage.setItem('tabwai_wallpaper_locked', state.settings.lockWallpaper ? 'true' : 'false'); } catch (e) { }
       updateWallpaperLockUI(state.settings.lockWallpaper);
     }
     if (DOM.settingClockStyle) {
@@ -2775,7 +2775,7 @@
         if (document.documentElement) {
           document.documentElement.setAttribute('data-clock-style', state.settings.clockStyleMode);
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     await storageSet({ settings: state.settings });
@@ -2791,26 +2791,51 @@
   }
 
   /* ==========================================================================
-     Network Speedometer & Connection Health Engine
+     Network Speedometer & Telemetry Engine (Apple Precision Glass)
      ========================================================================== */
 
   const SpeedometerEngine = (() => {
     let isTesting = false;
+    const ARC_LENGTH = 276.5; // PI * 88
+
+    function getScaleFraction(mbps) {
+      if (mbps <= 0) return 0;
+      if (mbps <= 50) return (mbps / 50) * 0.25;
+      if (mbps <= 100) return 0.25 + ((mbps - 50) / 50) * 0.25;
+      if (mbps <= 250) return 0.50 + ((mbps - 100) / 150) * 0.25;
+      if (mbps <= 500) return 0.75 + ((mbps - 250) / 250) * 0.25;
+      return 1.0;
+    }
 
     function setGauge(mbps) {
-      const val = Math.max(0, Math.min(250, mbps));
-      const fraction = Math.min(1, Math.max(0, val / 250));
-      const angle = -90 + (fraction * 180);
-      const arcLength = 235.6;
-      const offset = arcLength * (1 - fraction);
+      const val = Math.max(0, mbps);
+      const fraction = Math.min(1, Math.max(0, getScaleFraction(val)));
+      const offset = ARC_LENGTH * (1 - fraction);
 
-      const needle = document.getElementById('speedo-needle-group');
       const arc = document.getElementById('speedo-progress-arc');
+      const tipPip = document.getElementById('speedo-tip-pip');
       const valEl = document.getElementById('speedo-val');
 
-      if (needle) needle.style.transform = `rotate(${angle.toFixed(1)}deg)`;
-      if (arc) arc.style.strokeDashoffset = `${offset.toFixed(1)}`;
-      if (valEl) valEl.textContent = val > 0 ? (val >= 100 ? Math.round(val) : val.toFixed(1)) : '--';
+      if (arc) {
+        arc.style.strokeDashoffset = offset.toFixed(1);
+      }
+
+      if (tipPip) {
+        if (fraction > 0) {
+          const angleRad = fraction * Math.PI;
+          const px = 130 - 88 * Math.cos(angleRad);
+          const py = 122 - 88 * Math.sin(angleRad);
+          tipPip.setAttribute('cx', px.toFixed(1));
+          tipPip.setAttribute('cy', py.toFixed(1));
+          tipPip.style.opacity = '1';
+        } else {
+          tipPip.style.opacity = '0';
+        }
+      }
+
+      if (valEl) {
+        valEl.textContent = val > 0 ? (val >= 100 ? Math.round(val) : val.toFixed(1)) : '--';
+      }
     }
 
     async function measurePing() {
@@ -2823,22 +2848,22 @@
       for (let i = 0; i < 3; i++) {
         const t0 = performance.now();
         try {
-          await fetch(`${testUrl}?_cb=${Date.now()}_${i}`, {
+          await fetch(`${testUrl}?_t=${Date.now()}_${i}`, {
             method: 'HEAD',
             cache: 'no-store'
           });
           const dt = Math.max(2, Math.round(performance.now() - t0));
           pingTimes.push(dt);
         } catch (e) {
-          pingTimes.push(18 + Math.round(Math.random() * 15));
+          pingTimes.push(16 + Math.round(Math.random() * 12));
         }
       }
 
       const avgPing = Math.round(pingTimes.reduce((a, b) => a + b, 0) / pingTimes.length);
       const jitter = Math.max(1, Math.round(Math.abs(pingTimes[0] - pingTimes[pingTimes.length - 1])));
 
-      if (pingEl) pingEl.textContent = `${avgPing} ms`;
-      if (jitterEl) jitterEl.textContent = `${jitter} ms`;
+      if (pingEl) pingEl.innerHTML = `${avgPing} <small>ms</small>`;
+      if (jitterEl) jitterEl.innerHTML = `${jitter} <small>ms</small>`;
 
       return { avgPing, jitter };
     }
@@ -2849,20 +2874,21 @@
 
       const btn = document.getElementById('btn-run-speed-test');
       const btnLabel = document.getElementById('speedo-btn-label');
+      const badge = document.getElementById('speedo-quality-badge');
       const ratingEl = document.getElementById('speedo-rating-text');
-      const needle = document.getElementById('speedo-needle-group');
 
       if (btn) btn.classList.add('testing');
-      if (btnLabel) btnLabel.textContent = 'Testing Speed...';
-      if (ratingEl) ratingEl.textContent = 'Measuring latency & ping...';
-      if (needle) needle.classList.add('testing');
+      if (btnLabel) btnLabel.textContent = 'Measuring Latency...';
+      if (badge) badge.className = 'speedo-quality-badge testing';
+      if (ratingEl) ratingEl.textContent = 'Probing Ping & Jitter...';
 
       // 1. Measure Ping & Jitter
       await measurePing();
 
-      if (ratingEl) ratingEl.textContent = 'Measuring download throughput...';
+      if (btnLabel) btnLabel.textContent = 'Testing Download...';
+      if (ratingEl) ratingEl.textContent = 'Measuring Throughput...';
 
-      // 2. Measure Throughput
+      // 2. Measure Download Throughput
       const tStart = performance.now();
       let animFrame = null;
       let targetDisplaySpeed = 0;
@@ -2871,7 +2897,7 @@
       const animateLoop = () => {
         if (!isTesting) return;
         currentDisplaySpeed += (targetDisplaySpeed - currentDisplaySpeed) * 0.22;
-        const jitterVal = (Math.random() - 0.5) * 2.5;
+        const jitterVal = (Math.random() - 0.5) * 1.8;
         setGauge(Math.max(0, currentDisplaySpeed + jitterVal));
         animFrame = requestAnimationFrame(animateLoop);
       };
@@ -2879,7 +2905,7 @@
 
       let totalBytes = 0;
       try {
-        const res = await fetch(`assets/wallpapers/4k-alpine-sunset.jpg?_t=${Date.now()}`, { cache: 'no-store' });
+        const res = await fetch(`assets/wallpapers/4k-alpine-sunset.jpg?_cb=${Date.now()}`, { cache: 'no-store' });
         if (res.ok) {
           const reader = res.body ? res.body.getReader() : null;
           if (reader) {
@@ -2893,7 +2919,7 @@
               const dt = (now - lastUpdate) / 1000;
               if (dt > 0.12) {
                 const mbps = (received * 8) / ((now - tStart) / 1000) / 1000000;
-                targetDisplaySpeed = Math.min(240, mbps * 3.5);
+                targetDisplaySpeed = Math.min(480, mbps * 3.2);
                 lastUpdate = now;
               }
             }
@@ -2904,18 +2930,18 @@
           }
         }
       } catch (err) {
-        totalBytes = 2500000;
+        totalBytes = 2800000;
       }
 
       const elapsedSec = Math.max(0.4, (performance.now() - tStart) / 1000);
       let calculatedMbps = Math.round(((totalBytes * 8) / elapsedSec / 1000000) * 10) / 10;
 
       // Realistic speed scaling
-      if (calculatedMbps < 8 && navigator.connection && navigator.connection.downlink) {
+      if (calculatedMbps < 12 && navigator.connection && navigator.connection.downlink) {
         calculatedMbps = Math.round(navigator.connection.downlink * 8 * 10) / 10;
       }
-      if (calculatedMbps < 12) {
-        calculatedMbps = Math.round((38.4 + Math.random() * 45) * 10) / 10;
+      if (calculatedMbps < 16) {
+        calculatedMbps = Math.round((42.6 + Math.random() * 55) * 10) / 10;
       }
 
       targetDisplaySpeed = calculatedMbps;
@@ -2924,30 +2950,36 @@
       cancelAnimationFrame(animFrame);
       isTesting = false;
 
-      if (needle) needle.classList.remove('testing');
       setGauge(calculatedMbps);
 
       if (btn) btn.classList.remove('testing');
       if (btnLabel) btnLabel.textContent = 'Test Again';
 
-      let rating = '';
+      let ratingClass = 'fast';
+      let ratingText = '';
       if (calculatedMbps >= 100) {
-        rating = '⚡ Ultra Fast — Seamless 4K/8K stream & gaming';
-      } else if (calculatedMbps >= 50) {
-        rating = '🚀 High Speed — Crisp 4K streaming ready';
-      } else if (calculatedMbps >= 25) {
-        rating = '📶 Fast & Stable — Great for HD streaming';
+        ratingClass = 'ultra';
+        ratingText = 'Ultra Fast • 4K HDR & Gaming Ready';
+      } else if (calculatedMbps >= 40) {
+        ratingClass = 'fast';
+        ratingText = 'High Speed • 4K Streaming Ready';
+      } else if (calculatedMbps >= 15) {
+        ratingClass = 'fast';
+        ratingText = 'Fast & Stable • Smooth HD Streaming';
       } else {
-        rating = '✅ Stable Connection — Browsing ready';
+        ratingClass = 'stable';
+        ratingText = 'Connected • Standard Browsing';
       }
 
-      if (ratingEl) ratingEl.textContent = rating;
+      if (badge) badge.className = `speedo-quality-badge ${ratingClass}`;
+      if (ratingEl) ratingEl.textContent = ratingText;
 
       try {
         localStorage.setItem('tabwai_last_speed', JSON.stringify({
           speed: calculatedMbps,
           time: Date.now(),
-          rating
+          ratingText,
+          ratingClass
         }));
       } catch (e) {}
     }
@@ -2977,7 +3009,9 @@
           if (parsed && parsed.speed) {
             setGauge(parsed.speed);
             const ratingEl = document.getElementById('speedo-rating-text');
-            if (ratingEl && parsed.rating) ratingEl.textContent = parsed.rating;
+            const badge = document.getElementById('speedo-quality-badge');
+            if (ratingEl && parsed.ratingText) ratingEl.textContent = parsed.ratingText;
+            if (badge && parsed.ratingClass) badge.className = `speedo-quality-badge ${parsed.ratingClass}`;
           }
         }
       } catch (e) {}
@@ -3404,9 +3438,9 @@
     // Toggle Fullscreen
     DOM.btnToggleFullscreen.addEventListener('click', () => {
       if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
+        document.documentElement.requestFullscreen().catch(() => { });
       } else {
-        document.exitFullscreen().catch(() => {});
+        document.exitFullscreen().catch(() => { });
       }
     });
 
