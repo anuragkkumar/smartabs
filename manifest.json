@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Tabwai - Minimalist New Tab & Live Wallpapers",
+  "name": "Smartabs - Minimalist New Tab & Live Wallpapers",
   "version": "1.0.0",
   "description": "Ultra-minimalist new tab for Chrome and Brave. Enjoy pristine 4K wallpapers and live video backgrounds, then scroll down to seamlessly reveal your most-used sites sorted in order.",
   "chrome_url_overrides": {
@@ -36,7 +36,7 @@
       "48": "assets/icons/icon-48.png",
       "128": "assets/icons/icon-128.png"
     },
-    "default_title": "Tabwai"
+    "default_title": "Smartabs"
   },
   "web_accessible_resources": [
     {

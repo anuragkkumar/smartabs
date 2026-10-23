@@ -119,7 +119,7 @@
     hiddenUrls: new Set(),
     sortMode: 'rank', // 'rank' | 'alphabetical' | 'pinned'
     filterQuery: '',
-    browserName: 'Tabwai',
+    browserName: 'Smartabs',
     targetBoxForNewSite: 'productivity',
     wallhavenPage: 1,
     wallhavenQuery: 'toplist',
@@ -2868,8 +2868,8 @@
     if (data.browserName && data.browserName !== 'My Chrome') {
       state.browserName = data.browserName;
     } else {
-      state.browserName = 'Tabwai';
-      storageSet({ browserName: 'Tabwai' });
+      state.browserName = 'Smartabs';
+      storageSet({ browserName: 'Smartabs' });
     }
 
     if (DOM.browserNameInput) {
@@ -3002,7 +3002,7 @@
 
   function updateBrowserNameWidth() {
     if (!DOM.browserNameInput) return;
-    const text = DOM.browserNameInput.value || DOM.browserNameInput.placeholder || 'Tabwai';
+    const text = DOM.browserNameInput.value || DOM.browserNameInput.placeholder || 'Smartabs';
     DOM.browserNameInput.style.width = Math.min(240, Math.max(75, (text.length + 1) * 8.5)) + 'px';
   }
 
@@ -3015,7 +3015,7 @@
 
       DOM.browserNameInput.addEventListener('input', () => {
         updateBrowserNameWidth();
-        state.browserName = DOM.browserNameInput.value.trim() || 'Tabwai';
+        state.browserName = DOM.browserNameInput.value.trim() || 'Smartabs';
         storageSet({ browserName: state.browserName });
       });
 
@@ -3027,8 +3027,8 @@
 
       DOM.browserNameInput.addEventListener('blur', () => {
         if (!DOM.browserNameInput.value.trim()) {
-          DOM.browserNameInput.value = 'Tabwai';
-          state.browserName = 'Tabwai';
+          DOM.browserNameInput.value = 'Smartabs';
+          state.browserName = 'Smartabs';
           storageSet({ browserName: state.browserName });
         }
         updateBrowserNameWidth();

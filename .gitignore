@@ -15,6 +15,15 @@ ehthumbs.db
 *.sublime-project
 *.sublime-workspace
 
+# Environment & secrets
+.env
+.env.*
+*.pem
+*.key
+
 # Logs and scratch
 *.log
+npm-debug.log*
 scratch/
+tmp/
+temp/

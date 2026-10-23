@@ -1,7 +1,7 @@
-# 🌌 Tabwai - Minimalist New Tab & Live Wallpapers
+# 🌌 Smartabs - Minimalist New Tab & Live Wallpapers
 > **Ultra-minimalist, distraction-free New Tab extension for Google Chrome & Brave Browser.**
 
-Tabwai turns every new browser tab into an immersive, aesthetic sanctuary. When you open a tab, you are greeted by an ultra-clean, minimalist interface with breathtaking 4K wallpapers or animated live motion video backgrounds. When you scroll down, a sleek glassmorphism dashboard glides up revealing your organized workspace boxes, shortcuts, and AI launchpad.
+Smartabs turns every new browser tab into an immersive, aesthetic sanctuary. When you open a tab, you are greeted by an ultra-clean, minimalist interface with breathtaking 4K wallpapers or animated live motion video backgrounds. When you scroll down, a sleek glassmorphism dashboard glides up revealing your organized workspace boxes, shortcuts, and AI launchpad.
 
 ---
 
@@ -51,8 +51,8 @@ Tabwai turns every new browser tab into an immersive, aesthetic sanctuary. When 
    ```
 2. In the top right corner, enable **Developer mode** (toggle switch).
 3. Click the **"Load unpacked"** button in the top left.
-4. Select the `tabwai` folder from this repository.
-5. Open a new tab (`Cmd + T` on Mac / `Ctrl + T` on Windows) and enjoy Tabwai!
+4. Select this repository folder.
+5. Open a new tab (`Cmd + T` on Mac / `Ctrl + T` on Windows) and enjoy Smartabs!
 
 ### For Google Chrome:
 1. Open Chrome and navigate to:
@@ -61,7 +61,7 @@ Tabwai turns every new browser tab into an immersive, aesthetic sanctuary. When 
    ```
 2. In the top right corner, enable **Developer mode**.
 3. Click **"Load unpacked"**.
-4. Select the `tabwai` folder.
+4. Select this repository folder.
 5. Open a new tab (`Cmd + T` on Mac / `Ctrl + T` on Windows).
 
 ---
@@ -73,6 +73,7 @@ Tabwai turns every new browser tab into an immersive, aesthetic sanctuary. When 
 | <kbd>↓</kbd> or <kbd>Space</kbd> | Smoothly scroll down to reveal your workspace boxes |
 | <kbd>↑</kbd> or <kbd>Esc</kbd> | Scroll back up to the minimalist clock screen |
 | <kbd>W</kbd> | Instantly cycle to a random wallpaper or live video |
+| <kbd>L</kbd> | Lock / unlock current wallpaper from auto-cycling |
 | <kbd>/</kbd> | Focus the search bar |
 | <kbd>F11</kbd> | Toggle browser fullscreen mode |
 
@@ -81,7 +82,7 @@ Tabwai turns every new browser tab into an immersive, aesthetic sanctuary. When 
 ## 📁 Project Structure
 
 ```text
-tabwai/
+smartabs/
 ├── manifest.json              # Chrome/Brave Manifest V3 configuration
 ├── newtab.html                # Main new tab application entry
 ├── css/
