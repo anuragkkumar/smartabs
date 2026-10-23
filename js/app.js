@@ -141,7 +141,8 @@
       adaptiveClock: true,
       clockStyleMode: 'auto',
       superHdOnly: true,
-      galleryQualityFilter: 'super-hd'
+      galleryQualityFilter: 'super-hd',
+      lockWallpaper: false
     }
   };
 
@@ -181,6 +182,8 @@
     btnGallery: document.getElementById('btn-gallery'),
     btnGalleryRandom: document.getElementById('btn-gallery-random'),
     btnRandomBg: document.getElementById('btn-random-bg'),
+    btnLockWallpaper: document.getElementById('btn-lock-wallpaper'),
+    btnLockWallpaperGallery: document.getElementById('btn-lock-wallpaper-gallery'),
     galleryTabs: document.querySelectorAll('.gallery-tab'),
     curatedWallpapersToolbar: document.getElementById('curated-wallpapers-toolbar'),
     curatedTags: document.querySelectorAll('#curated-tags .wh-tag'),
@@ -198,6 +201,7 @@
     settingShowDate: document.getElementById('setting-show-date'),
     settingShowGreeting: document.getElementById('setting-show-greeting'),
     settingAdaptiveClock: document.getElementById('setting-adaptive-clock'),
+    settingLockWallpaper: document.getElementById('setting-lock-wallpaper'),
     settingClockStyle: document.getElementById('setting-clock-style'),
     btnResetCache: document.getElementById('btn-reset-cache'),
     // Add Site Modal
@@ -820,7 +824,72 @@
     return pool[Math.floor(Math.random() * pool.length)];
   }
 
+  let toastTimer = null;
+  function showToast(msg) {
+    let toast = document.getElementById('tabwai-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'tabwai-toast';
+      toast.className = 'tabwai-toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.classList.remove('show');
+    }, 2200);
+  }
+
+  function updateWallpaperLockUI(isLocked) {
+    const locked = !!isLocked;
+
+    if (DOM.btnLockWallpaperGallery) {
+      DOM.btnLockWallpaperGallery.classList.toggle('locked', locked);
+      const iconUn = DOM.btnLockWallpaperGallery.querySelector('.icon-unlocked');
+      const iconLk = DOM.btnLockWallpaperGallery.querySelector('.icon-locked');
+      if (iconUn) iconUn.classList.toggle('hidden', locked);
+      if (iconLk) iconLk.classList.toggle('hidden', !locked);
+      const label = DOM.btnLockWallpaperGallery.querySelector('.lock-label');
+      if (label) label.textContent = locked ? 'Wallpaper Locked' : 'Lock Wallpaper';
+      DOM.btnLockWallpaperGallery.title = locked ? 'Wallpaper is locked (Click to unlock)' : 'Lock current wallpaper (prevents it from changing)';
+    }
+
+    if (DOM.btnLockWallpaper) {
+      DOM.btnLockWallpaper.classList.toggle('is-locked', locked);
+      const iconUn = DOM.btnLockWallpaper.querySelector('.icon-unlocked');
+      const iconLk = DOM.btnLockWallpaper.querySelector('.icon-locked');
+      if (iconUn) iconUn.classList.toggle('hidden', locked);
+      if (iconLk) iconLk.classList.toggle('hidden', !locked);
+      DOM.btnLockWallpaper.title = locked ? 'Wallpaper is locked (Click to unlock)' : 'Lock Current Wallpaper (Shortcut: L)';
+    }
+
+    if (DOM.settingLockWallpaper) {
+      DOM.settingLockWallpaper.checked = locked;
+    }
+
+    if (DOM.btnRandomBg) {
+      DOM.btnRandomBg.classList.toggle('is-locked', locked);
+      DOM.btnRandomBg.title = locked ? 'Wallpaper is locked. Click lock icon to unlock.' : 'Cycle Random Background (Shortcut: W)';
+    }
+  }
+
+  function toggleWallpaperLock() {
+    state.settings.lockWallpaper = !state.settings.lockWallpaper;
+    storageSet({ settings: state.settings });
+    try {
+      localStorage.setItem('tabwai_wallpaper_locked', state.settings.lockWallpaper ? 'true' : 'false');
+    } catch (e) {}
+
+    updateWallpaperLockUI(state.settings.lockWallpaper);
+    showToast(state.settings.lockWallpaper ? '🔒 Wallpaper locked (will not change)' : '🔓 Wallpaper unlocked');
+  }
+
   async function cycleRandomBackground() {
+    if (state.settings.lockWallpaper) {
+      showToast('🔒 Wallpaper is locked. Unlock to change.');
+      return;
+    }
     if (isSwitchingBg) return;
     isSwitchingBg = true;
 
@@ -844,7 +913,21 @@
   }
 
   async function initBackground() {
-    if (state.settings.autoCycle) {
+    if (state.settings.lockWallpaper && state.currentBg) {
+      if (state.currentBg.type === 'video') {
+        const item = state.videos.find((v) => v.id === state.currentBg.id);
+        if (item) { await applyBackground(item, true); return; }
+      } else {
+        const item = state.wallpapers.find((w) => w.id === state.currentBg.id);
+        if (item) { await applyBackground(item, false); return; }
+        if (state.currentBg.src) {
+          await applyBackground({ id: state.currentBg.id, title: state.currentBg.title, src: state.currentBg.src, thumb: state.currentBg.thumb }, false);
+          return;
+        }
+      }
+    }
+
+    if (state.settings.autoCycle && !state.settings.lockWallpaper) {
       await cycleRandomBackground();
       return;
     }
@@ -2655,6 +2738,10 @@
       const validMode = (state.settings.clockStyleMode === 'capsule') ? 'capsule' : 'auto';
       DOM.settingClockStyle.value = validMode;
     }
+    state.settings.lockWallpaper = (data.settings && data.settings.lockWallpaper !== undefined)
+      ? !!data.settings.lockWallpaper
+      : (localStorage.getItem('tabwai_wallpaper_locked') === 'true');
+    updateWallpaperLockUI(state.settings.lockWallpaper);
 
     // Hardcode sensible defaults for removed settings
     state.settings.superHdOnly = true;
@@ -2675,6 +2762,11 @@
     if (DOM.settingShowGreeting) state.settings.showGreeting = DOM.settingShowGreeting.checked;
     if (DOM.setting24hClock) state.settings.use24h = DOM.setting24hClock.checked;
     if (DOM.settingAdaptiveClock) state.settings.adaptiveClock = DOM.settingAdaptiveClock.checked;
+    if (DOM.settingLockWallpaper) {
+      state.settings.lockWallpaper = DOM.settingLockWallpaper.checked;
+      try { localStorage.setItem('tabwai_wallpaper_locked', state.settings.lockWallpaper ? 'true' : 'false'); } catch (e) {}
+      updateWallpaperLockUI(state.settings.lockWallpaper);
+    }
     if (DOM.settingClockStyle) {
       state.settings.clockStyleMode = DOM.settingClockStyle.value;
       try {
@@ -2990,10 +3082,18 @@
       DOM.settingShowGreeting,
       DOM.setting24hClock,
       DOM.settingAdaptiveClock,
+      DOM.settingLockWallpaper,
       DOM.settingClockStyle
     ].forEach((input) => {
       if (input) input.addEventListener('change', saveSettings);
     });
+
+    if (DOM.btnLockWallpaper) {
+      DOM.btnLockWallpaper.addEventListener('click', toggleWallpaperLock);
+    }
+    if (DOM.btnLockWallpaperGallery) {
+      DOM.btnLockWallpaperGallery.addEventListener('click', toggleWallpaperLock);
+    }
 
     DOM.btnResetCache.addEventListener('click', async () => {
       if (confirm('Reset your boxes and shortcuts back to default?')) {
@@ -3149,6 +3249,9 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else if (e.key === 'w' || e.key === 'W') {
         cycleRandomBackground();
+      } else if (e.key === 'l' || e.key === 'L') {
+        e.preventDefault();
+        toggleWallpaperLock();
       } else if (e.key === 'i' || e.key === 'I') {
         e.preventDefault();
         openIncognito();
