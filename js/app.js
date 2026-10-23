@@ -2513,7 +2513,7 @@
       }
     }
 
-    function scheduleCloseDock(delayMs = 280) {
+    function scheduleCloseDock(delayMs = 360) {
       if (state.dockPinned || state.dockEditing) return;
       if (DOM.modalDockApp && DOM.modalDockApp.classList.contains('open')) return;
       if (closeTimeout) clearTimeout(closeTimeout);
@@ -2711,7 +2711,7 @@
           openDock();
         });
         DOM.macDockHandle.addEventListener('mouseleave', () => {
-          scheduleCloseDock(280);
+          scheduleCloseDock(360);
         });
         DOM.macDockHandle.addEventListener('click', toggleDock);
       }
@@ -2721,7 +2721,7 @@
           openDock();
         });
         DOM.macDockShelf.addEventListener('mouseleave', () => {
-          scheduleCloseDock(280);
+          scheduleCloseDock(360);
         });
       }
 
@@ -2732,16 +2732,16 @@
         // Smooth slide open when cursor touches left edge (within 24px)
         if (e.clientX <= 24) {
           openDock();
-        } else if (e.clientX > 150) {
+        } else if (e.clientX > 165) {
           // When cursor safely moves away past the dock shelf + magnified icons
           if (DOM.macDockShelf && !DOM.macDockShelf.contains(e.target) && DOM.macDockHandle && !DOM.macDockHandle.contains(e.target)) {
-            scheduleCloseDock(220);
+            scheduleCloseDock(300);
           }
         }
       });
 
       document.addEventListener('mouseleave', () => {
-        scheduleCloseDock(100);
+        scheduleCloseDock(200);
       });
 
       // Magnification on hover wave
@@ -2955,7 +2955,7 @@
         DOM.bannerHintPopup.classList.add('hidden');
         DOM.bannerHintPopup.classList.remove('closing');
       }
-    }, 400);
+    }, 480);
   }
 
   async function checkAndShowBannerHint() {
@@ -2981,7 +2981,7 @@
       storageSet({ bannerTipSeen: true });
     } catch (e) { }
 
-    // Wait 700ms after new tab load before sliding up
+    // Wait 900ms after new tab load before sliding up gently
     setTimeout(() => {
       if (!DOM.bannerHintPopup) return;
       DOM.bannerHintPopup.classList.remove('hidden');
@@ -2993,7 +2993,7 @@
       bannerHintTimer = setTimeout(() => {
         dismissBannerHint();
       }, 9000);
-    }, 700);
+    }, 900);
   }
 
   /* ==========================================================================
