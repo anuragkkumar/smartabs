@@ -314,7 +314,7 @@
         document.body.classList.add('clock-theme-light');
         if (document.documentElement) document.documentElement.classList.add('clock-theme-light');
       }
-    } catch (e) {}
+    } catch (e) { }
 
     await loadSettingsAndPreferences();
     initClock();
@@ -333,7 +333,7 @@
 
   function updateClock() {
     const now = new Date();
-    
+
     // 1. Time (Clock)
     if (state.settings.showClock) {
       DOM.clockTime.style.display = 'block';
@@ -409,7 +409,7 @@
       if (document.documentElement) {
         document.documentElement.setAttribute('data-clock-style', effectiveMode);
       }
-    } catch (e) {}
+    } catch (e) { }
 
     // Adaptive contrast: auto-detect light/dark wallpaper for both modes
     const isLight = state.settings.adaptiveClock ? !!isLightBg : false;
@@ -421,7 +421,7 @@
     }
     try {
       localStorage.setItem('tabwai_clock_theme', isLight ? 'light' : 'dark');
-    } catch (e) {}
+    } catch (e) { }
   }
 
   function detectWallpaperLuminance(src) {
@@ -676,7 +676,7 @@
         DOM.bgVideo.muted = state.settings.videoMuted;
         DOM.bgVideo.play().catch(() => {
           DOM.bgVideo.muted = true;
-          DOM.bgVideo.play().catch(() => {});
+          DOM.bgVideo.play().catch(() => { });
         });
         DOM.bgVideo.classList.add('active');
         state.currentBg = { type: 'video', id: item.id, title: item.title, poster: item.poster };
@@ -884,7 +884,7 @@
     storageSet({ settings: state.settings });
     try {
       localStorage.setItem('tabwai_wallpaper_locked', state.settings.lockWallpaper ? 'true' : 'false');
-    } catch (e) {}
+    } catch (e) { }
 
     updateWallpaperLockUI(state.settings.lockWallpaper);
     showToast(state.settings.lockWallpaper ? '🔒 Wallpaper locked (will not change)' : '🔓 Wallpaper unlocked');
@@ -1495,7 +1495,7 @@
 
     if (confirm(`Delete the "${boxTitle}" box?\n\nAny sites in this box will be safely moved to "${targetName}".`)) {
       state.boxes = state.boxes.filter((b) => b.id !== boxId);
-      
+
       const targetId = remainingBox ? remainingBox.id : 'productivity';
       Object.keys(state.siteBoxMapping).forEach((url) => {
         if (state.siteBoxMapping[url] === boxId) {
@@ -1684,7 +1684,7 @@
     const curated = WALLPAPER_CATALOG.onlineCurated;
     const q = query.trim().toLowerCase();
     let rawList = curated[q] || [];
-    
+
     if (rawList.length === 0) {
       for (const key of Object.keys(curated)) {
         if (q.includes(key) || key.includes(q)) {
@@ -2063,7 +2063,7 @@
           const url = chrome.runtime.getURL(relPath);
           if (url) return url;
         }
-      } catch (e) {}
+      } catch (e) { }
       return relPath;
     }
 
@@ -2294,12 +2294,111 @@
   }
 
   /* ==========================================================================
+     Tactile UI Sound Engine (Web Audio API - Crisp Glassy Pops & Chimes)
+     Zero-latency synthesized acoustic feedback on UI hovers and interactions
+     ========================================================================== */
+  const SoundFX = (() => {
+    let audioCtx = null;
+    let lastSoundTime = 0;
+
+    function getAudioContext() {
+      try {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+          }
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume().catch(() => {});
+        }
+        return audioCtx;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // Warm up audio context on first user movement so hover sounds play instantly
+    function warmup() {
+      getAudioContext();
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('pointerdown', warmup, { once: true, passive: true });
+      window.addEventListener('mousemove', warmup, { once: true, passive: true });
+    }
+
+    // Play an ultra-clean, glassy acoustic bubble pop / macOS tactile click
+    function playHover(pitch = 1.0) {
+      try {
+        const now = performance.now();
+        if (now - lastSoundTime < 32) return; // Debounce rapid sweeps
+        lastSoundTime = now;
+
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const t = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        // Warm, tactile frequency with subtle pitch envelope drop
+        const baseFreq = 560 * Math.max(0.6, Math.min(2.4, pitch));
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(baseFreq, t);
+        osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.74, t + 0.045);
+
+        // Tactile micro-envelope: instantaneous attack, soft decay (42ms)
+        gain.gain.setValueAtTime(0.04, t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.042);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(t);
+        osc.stop(t + 0.048);
+      } catch (e) {}
+    }
+
+    // Subtle glassy chime when dock slides open
+    function playDockOpen() {
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const t = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(360, t);
+        osc.frequency.exponentialRampToValueAtTime(520, t + 0.07);
+
+        gain.gain.setValueAtTime(0.025, t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(t);
+        osc.stop(t + 0.085);
+      } catch (e) {}
+    }
+
+    return {
+      playHover,
+      playDockOpen,
+      warmup
+    };
+  })();
+
+  /* ==========================================================================
      macOS Left Glass AI Launchpad Dock Engine
      Authentic Apple vertical slide-in shelf with fisheye magnification wave,
      running status dots, brand squircle icons, customizable apps & pin toggle
      ========================================================================== */
 
   const MacAiDockEngine = (() => {
+    let closeTimeout = null;
     function getAppIconSvg(iconType, title, url) {
       switch (iconType) {
         case 'chatgpt':
@@ -2352,7 +2451,7 @@
         state.dockApps = JSON.parse(JSON.stringify(DEFAULT_DOCK_APPS));
       }
 
-      state.dockApps.forEach((app) => {
+      state.dockApps.forEach((app, index) => {
         const wrap = document.createElement('div');
         wrap.className = 'dock-item-wrap';
         wrap.dataset.id = app.id;
@@ -2368,6 +2467,13 @@
           <span class="dock-dot-indicator" title="Active"></span>
           <span class="dock-tooltip">${app.title}</span>
         `;
+
+        // Tactile sound feedback on icon hover with harmonized musical scale
+        wrap.addEventListener('mouseenter', () => {
+          const notes = [1.0, 1.12, 1.25, 1.36, 1.5, 1.68, 1.82];
+          const pitch = notes[index % notes.length] || 1.1;
+          SoundFX.playHover(pitch);
+        });
 
         // Handle clicks
         const link = wrap.querySelector('.dock-app-icon');
@@ -2396,14 +2502,33 @@
     }
 
     function openDock() {
-      if (DOM.macDockWrapper && !DOM.macDockWrapper.classList.contains('is-open')) {
-        DOM.macDockWrapper.classList.add('is-open');
+      if (closeTimeout) {
+        clearTimeout(closeTimeout);
+        closeTimeout = null;
       }
+      if (!DOM.macDockWrapper) return;
+      if (!DOM.macDockWrapper.classList.contains('is-open')) {
+        DOM.macDockWrapper.classList.add('is-open');
+        SoundFX.playDockOpen();
+      }
+    }
+
+    function scheduleCloseDock(delayMs = 280) {
+      if (state.dockPinned || state.dockEditing) return;
+      if (DOM.modalDockApp && DOM.modalDockApp.classList.contains('open')) return;
+      if (closeTimeout) clearTimeout(closeTimeout);
+      closeTimeout = setTimeout(() => {
+        closeDock();
+      }, delayMs);
     }
 
     function closeDock() {
       if (state.dockPinned || state.dockEditing) return;
       if (DOM.modalDockApp && DOM.modalDockApp.classList.contains('open')) return;
+      if (closeTimeout) {
+        clearTimeout(closeTimeout);
+        closeTimeout = null;
+      }
       if (DOM.macDockWrapper && DOM.macDockWrapper.classList.contains('is-open')) {
         DOM.macDockWrapper.classList.remove('is-open');
       }
@@ -2579,16 +2704,24 @@
       render();
       syncPin();
 
-      // Trigger & Edge Detection - Instant zero-delay reaction
+      // Trigger & Edge Detection with smooth grace buffer
       if (DOM.macDockHandle) {
-        DOM.macDockHandle.addEventListener('mouseenter', openDock);
+        DOM.macDockHandle.addEventListener('mouseenter', () => {
+          SoundFX.playHover(0.95);
+          openDock();
+        });
+        DOM.macDockHandle.addEventListener('mouseleave', () => {
+          scheduleCloseDock(280);
+        });
         DOM.macDockHandle.addEventListener('click', toggleDock);
       }
 
       if (DOM.macDockShelf) {
-        DOM.macDockShelf.addEventListener('mouseenter', openDock);
+        DOM.macDockShelf.addEventListener('mouseenter', () => {
+          openDock();
+        });
         DOM.macDockShelf.addEventListener('mouseleave', () => {
-          closeDock();
+          scheduleCloseDock(280);
         });
       }
 
@@ -2596,19 +2729,19 @@
         if (state.dockPinned || state.dockEditing) return;
         if (DOM.modalDockApp && DOM.modalDockApp.classList.contains('open')) return;
 
-        // Instant slide open when cursor touches left edge (within 28px)
-        if (e.clientX <= 28) {
+        // Smooth slide open when cursor touches left edge (within 24px)
+        if (e.clientX <= 24) {
           openDock();
-        } else if (e.clientX > 95) {
-          // Instant hide as soon as cursor leaves dock area
+        } else if (e.clientX > 150) {
+          // When cursor safely moves away past the dock shelf + magnified icons
           if (DOM.macDockShelf && !DOM.macDockShelf.contains(e.target) && DOM.macDockHandle && !DOM.macDockHandle.contains(e.target)) {
-            closeDock();
+            scheduleCloseDock(220);
           }
         }
       });
 
       document.addEventListener('mouseleave', () => {
-        closeDock();
+        scheduleCloseDock(100);
       });
 
       // Magnification on hover wave
@@ -2619,14 +2752,21 @@
 
       // Pin button
       if (DOM.btnDockPin) {
+        DOM.btnDockPin.addEventListener('mouseenter', () => {
+          SoundFX.playHover(1.3);
+        });
         DOM.btnDockPin.addEventListener('click', (e) => {
           e.stopPropagation();
           togglePin();
+          SoundFX.playHover(1.6);
         });
       }
 
       // Add & Edit Tool buttons
       if (DOM.btnDockAdd) {
+        DOM.btnDockAdd.addEventListener('mouseenter', () => {
+          SoundFX.playHover(1.4);
+        });
         DOM.btnDockAdd.addEventListener('click', (e) => {
           e.stopPropagation();
           openAddModal();
@@ -2634,6 +2774,9 @@
       }
 
       if (DOM.btnDockEdit) {
+        DOM.btnDockEdit.addEventListener('mouseenter', () => {
+          SoundFX.playHover(1.22);
+        });
         DOM.btnDockEdit.addEventListener('click', (e) => {
           e.stopPropagation();
           toggleEditMode();
@@ -2769,7 +2912,7 @@
     if (DOM.settingAdaptiveClock) state.settings.adaptiveClock = DOM.settingAdaptiveClock.checked;
     if (DOM.settingLockWallpaper) {
       state.settings.lockWallpaper = DOM.settingLockWallpaper.checked;
-      try { localStorage.setItem('tabwai_wallpaper_locked', state.settings.lockWallpaper ? 'true' : 'false'); } catch (e) {}
+      try { localStorage.setItem('tabwai_wallpaper_locked', state.settings.lockWallpaper ? 'true' : 'false'); } catch (e) { }
       updateWallpaperLockUI(state.settings.lockWallpaper);
     }
     if (DOM.settingClockStyle) {
@@ -2779,7 +2922,7 @@
         if (document.documentElement) {
           document.documentElement.setAttribute('data-clock-style', state.settings.clockStyleMode);
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     await storageSet({ settings: state.settings });
@@ -2836,7 +2979,7 @@
     try {
       localStorage.setItem('tabwai_banner_tip_seen', 'true');
       storageSet({ bannerTipSeen: true });
-    } catch (e) {}
+    } catch (e) { }
 
     // Wait 700ms after new tab load before sliding up
     setTimeout(() => {
@@ -3178,7 +3321,7 @@
         state.dockPinned = false;
         try {
           localStorage.removeItem('tabwai_banner_tip_seen');
-        } catch (e) {}
+        } catch (e) { }
         await storageSet({
           hiddenUrls: [],
           pinnedUrls: [],
@@ -3280,9 +3423,9 @@
     // Toggle Fullscreen
     DOM.btnToggleFullscreen.addEventListener('click', () => {
       if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
+        document.documentElement.requestFullscreen().catch(() => { });
       } else {
-        document.exitFullscreen().catch(() => {});
+        document.exitFullscreen().catch(() => { });
       }
     });
 
