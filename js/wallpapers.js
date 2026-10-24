@@ -1,4 +1,4 @@
-// Tabwai Wallpaper & Video Background Catalog
+// Smartabs Wallpaper & Video Background Catalog
 const WALLPAPER_CATALOG = {
   "wallpapers": [
     {

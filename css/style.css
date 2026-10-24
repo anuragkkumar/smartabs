@@ -1,5 +1,5 @@
 /* ==========================================================================
-   TABWAI - Minimalist & Motion New Tab
+   SMARTABS - Minimalist & Motion New Tab
    Design System & Styling
    ========================================================================== */
 
@@ -1896,6 +1896,7 @@ html.clock-theme-light[data-clock-style="capsule"] .clock-wrapper {
 }
 
 /* Floating Toast Notification */
+.smartabs-toast,
 .tabwai-toast {
   position: fixed;
   top: 1.5rem;
@@ -1920,6 +1921,7 @@ html.clock-theme-light[data-clock-style="capsule"] .clock-wrapper {
   gap: 0.5rem;
 }
 
+.smartabs-toast.show,
 .tabwai-toast.show {
   transform: translateX(-50%) translateY(0);
   opacity: 1;

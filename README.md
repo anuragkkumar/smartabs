@@ -1,11 +1,11 @@
 # 🌌 Smartabs - Minimalist New Tab & Live Wallpapers
 > **Ultra-minimalist, distraction-free New Tab extension for Google Chrome & Brave Browser.**
 
-<p align="center">
-  <img src="assets/screenshots/smartabs-live.jpg" alt="Smartabs Live Interface Preview" width="100%">
-</p>
-
 Smartabs turns every new browser tab into an immersive, aesthetic sanctuary. When you open a tab, you are greeted by an ultra-clean, minimalist interface with breathtaking 4K wallpapers or animated live motion video backgrounds. When you scroll down, a sleek glassmorphism dashboard glides up revealing your organized workspace boxes, shortcuts, and AI launchpad.
+
+<p align="center">
+  <img src="assets/screenshots/minimal-screen.png" alt="Smartabs Minimalist Sanctuary View" width="100%">
+</p>
 
 ---
 
@@ -19,10 +19,6 @@ Smartabs turns every new browser tab into an immersive, aesthetic sanctuary. Whe
    - Seamless wallpaper luminance detection that dynamically shifts text between light and dark themes.
    - Built-in minimalist Google Search bar directly below the time.
 
-<p align="center">
-  <img src="assets/screenshots/smartabs-hero.jpg" alt="Smartabs Minimalist 4K Mountain View" width="100%">
-</p>
-
 2. **Categorized Liquid Workspace Boxes**:
    - **4-Shortcuts-per-Box Limit**: Keeps shortcuts clean, uncluttered, and readable.
    - **Custom Categories**: Create, rename, customize icons/colors, and reorder your category boxes (*Productivity, Social, Media, Dev, Quick Access*).
@@ -30,7 +26,7 @@ Smartabs turns every new browser tab into an immersive, aesthetic sanctuary. Whe
    - **Filter & Search**: Quickly filter through your shortcuts in real time or press <kbd>Enter</kbd> to search the web directly.
 
 <p align="center">
-  <img src="assets/screenshots/smartabs-dashboard.jpg" alt="Smartabs Liquid Workspace Dashboard" width="100%">
+  <img src="assets/screenshots/dashboard-screen.png" alt="Smartabs Liquid Workspace Dashboard" width="100%">
 </p>
 
 3. **macOS Left Glass AI Launchpad Dock**:

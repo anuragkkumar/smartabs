@@ -1,5 +1,5 @@
 /**
- * Tabwai - Minimalist & Motion New Tab
+ * Smartabs - Minimalist & Motion New Tab
  * Application Controller with Liquid Rectangle Boxes Engine
  */
 
@@ -283,7 +283,7 @@
     } else {
       const res = {};
       keys.forEach((k) => {
-        const val = localStorage.getItem('tabwai_' + k);
+        const val = localStorage.getItem('smartabs_' + k) || localStorage.getItem('tabwai_' + k);
         if (val) {
           try { res[k] = JSON.parse(val); } catch (e) { res[k] = val; }
         }
@@ -297,7 +297,7 @@
       return new Promise((resolve) => chrome.storage.local.set(data, resolve));
     } else {
       Object.keys(data).forEach((k) => {
-        localStorage.setItem('tabwai_' + k, JSON.stringify(data[k]));
+        localStorage.setItem('smartabs_' + k, JSON.stringify(data[k]));
       });
     }
   }
@@ -305,11 +305,11 @@
   async function init() {
     // 1. Synchronously restore cached styles to prevent any FOUC / flash of unstyled content
     try {
-      const cachedStyle = localStorage.getItem('tabwai_clock_style');
+      const cachedStyle = localStorage.getItem('smartabs_clock_style') || localStorage.getItem('tabwai_clock_style');
       if (cachedStyle && DOM.clockContainer) {
         DOM.clockContainer.classList.toggle('style-capsule', cachedStyle === 'capsule');
       }
-      const cachedTheme = localStorage.getItem('tabwai_clock_theme');
+      const cachedTheme = localStorage.getItem('smartabs_clock_theme') || localStorage.getItem('tabwai_clock_theme');
       if (cachedTheme === 'light') {
         document.body.classList.add('clock-theme-light');
         if (document.documentElement) document.documentElement.classList.add('clock-theme-light');
@@ -405,7 +405,7 @@
     DOM.clockContainer.classList.toggle('style-capsule', effectiveMode === 'capsule');
 
     try {
-      localStorage.setItem('tabwai_clock_style', effectiveMode);
+      localStorage.setItem('smartabs_clock_style', effectiveMode);
       if (document.documentElement) {
         document.documentElement.setAttribute('data-clock-style', effectiveMode);
       }
@@ -420,7 +420,7 @@
       document.documentElement.setAttribute('data-clock-theme', isLight ? 'light' : 'dark');
     }
     try {
-      localStorage.setItem('tabwai_clock_theme', isLight ? 'light' : 'dark');
+      localStorage.setItem('smartabs_clock_theme', isLight ? 'light' : 'dark');
     } catch (e) { }
   }
 
@@ -831,11 +831,11 @@
 
   let toastTimer = null;
   function showToast(msg) {
-    let toast = document.getElementById('tabwai-toast');
+    let toast = document.getElementById('smartabs-toast') || document.getElementById('tabwai-toast');
     if (!toast) {
       toast = document.createElement('div');
-      toast.id = 'tabwai-toast';
-      toast.className = 'tabwai-toast';
+      toast.id = 'smartabs-toast';
+      toast.className = 'smartabs-toast';
       document.body.appendChild(toast);
     }
     toast.textContent = msg;
@@ -883,7 +883,7 @@
     state.settings.lockWallpaper = !state.settings.lockWallpaper;
     storageSet({ settings: state.settings });
     try {
-      localStorage.setItem('tabwai_wallpaper_locked', state.settings.lockWallpaper ? 'true' : 'false');
+      localStorage.setItem('smartabs_wallpaper_locked', state.settings.lockWallpaper ? 'true' : 'false');
     } catch (e) { }
 
     updateWallpaperLockUI(state.settings.lockWallpaper);
@@ -2003,7 +2003,7 @@
     if (typeof chrome !== 'undefined' && chrome.windows && chrome.windows.create) {
       chrome.windows.getAll({ populate: true, windowTypes: ['normal'] }, (windows) => {
         if (chrome.runtime.lastError) {
-          console.warn('Tabwai: Window query error:', chrome.runtime.lastError.message);
+          console.warn('Smartabs: Window query error:', chrome.runtime.lastError.message);
         }
 
         const existingIncognito = (windows || []).find((w) => w.incognito);
@@ -2021,7 +2021,7 @@
           // No incognito window open: create a new incognito window (opens with a fresh new tab)
           chrome.windows.create({ incognito: true, focused: true }, (newWin) => {
             if (chrome.runtime.lastError) {
-              console.warn('Tabwai: Could not open incognito window:', chrome.runtime.lastError.message);
+              console.warn('Smartabs: Could not open incognito window:', chrome.runtime.lastError.message);
               window.open('https://www.google.com', '_blank');
             }
           });
@@ -2888,7 +2888,7 @@
     }
     state.settings.lockWallpaper = (data.settings && data.settings.lockWallpaper !== undefined)
       ? !!data.settings.lockWallpaper
-      : (localStorage.getItem('tabwai_wallpaper_locked') === 'true');
+      : ((localStorage.getItem('smartabs_wallpaper_locked') || localStorage.getItem('tabwai_wallpaper_locked')) === 'true');
     updateWallpaperLockUI(state.settings.lockWallpaper);
 
     // Hardcode sensible defaults for removed settings
@@ -2912,13 +2912,13 @@
     if (DOM.settingAdaptiveClock) state.settings.adaptiveClock = DOM.settingAdaptiveClock.checked;
     if (DOM.settingLockWallpaper) {
       state.settings.lockWallpaper = DOM.settingLockWallpaper.checked;
-      try { localStorage.setItem('tabwai_wallpaper_locked', state.settings.lockWallpaper ? 'true' : 'false'); } catch (e) { }
+      try { localStorage.setItem('smartabs_wallpaper_locked', state.settings.lockWallpaper ? 'true' : 'false'); } catch (e) { }
       updateWallpaperLockUI(state.settings.lockWallpaper);
     }
     if (DOM.settingClockStyle) {
       state.settings.clockStyleMode = DOM.settingClockStyle.value;
       try {
-        localStorage.setItem('tabwai_clock_style', state.settings.clockStyleMode);
+        localStorage.setItem('smartabs_clock_style', state.settings.clockStyleMode);
         if (document.documentElement) {
           document.documentElement.setAttribute('data-clock-style', state.settings.clockStyleMode);
         }
@@ -2963,12 +2963,12 @@
 
     // Check if user has already seen this tip
     try {
-      const localSeen = localStorage.getItem('tabwai_banner_tip_seen');
+      const localSeen = localStorage.getItem('smartabs_banner_tip_seen') || localStorage.getItem('tabwai_banner_tip_seen');
       if (localSeen === 'true') return;
 
       const stored = await storageGet(['bannerTipSeen']);
       if (stored && stored.bannerTipSeen) {
-        localStorage.setItem('tabwai_banner_tip_seen', 'true');
+        localStorage.setItem('smartabs_banner_tip_seen', 'true');
         return;
       }
     } catch (e) {
@@ -2977,7 +2977,7 @@
 
     // Mark as seen immediately so it doesn't trigger on multiple new tabs opened simultaneously
     try {
-      localStorage.setItem('tabwai_banner_tip_seen', 'true');
+      localStorage.setItem('smartabs_banner_tip_seen', 'true');
       storageSet({ bannerTipSeen: true });
     } catch (e) { }
 
@@ -3320,6 +3320,7 @@
         state.dockApps = JSON.parse(JSON.stringify(DEFAULT_DOCK_APPS));
         state.dockPinned = false;
         try {
+          localStorage.removeItem('smartabs_banner_tip_seen');
           localStorage.removeItem('tabwai_banner_tip_seen');
         } catch (e) { }
         await storageSet({

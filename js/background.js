@@ -1,4 +1,4 @@
-// Tabwai - Background Service Worker (Manifest V3)
+// Smartabs - Background Service Worker (Manifest V3)
 // Configures dynamic rules and handles cross-origin Wallhaven API requests
 
 function setupDNRRules() {
@@ -24,7 +24,7 @@ function setupDNRRules() {
         }
       ]
     }).catch((err) => {
-      console.warn('[Tabwai SW] DNR rule error:', err);
+      console.warn('[Smartabs SW] DNR rule error:', err);
     });
   }
 }
@@ -53,7 +53,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse({ success: true, data });
       })
       .catch((err) => {
-        console.error('[Tabwai SW] Fetch error:', err);
+        console.error('[Smartabs SW] Fetch error:', err);
         sendResponse({ success: false, error: err.message });
       });
 
